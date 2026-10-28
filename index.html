@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CNAB → Planilha BB</title>
+<meta name="description" content="Converte arquivos CNAB 240 (PGTO27) na planilha-padrão de remessas PIX do Banco do Brasil. Processamento 100% no navegador.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+<div class="grid-bg" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">⚡</span>
+    <div>
+      <strong>CNAB&nbsp;→&nbsp;Planilha&nbsp;BB</strong>
+      <small>Conversor de remessas PIX · Banco do Brasil</small>
+    </div>
+  </div>
+  <span class="privacy" title="Nada é enviado a servidores">🔒 100% no seu navegador</span>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Transforme <span class="grad">CNAB 240</span> na planilha de <span class="grad2">remessas do BB</span></h1>
+    <p>Suba um ou mais arquivos <code>PGTO27</code> (.txt). O sistema lê, confere e devolve a planilha
+       pronta no modelo exigido pela plataforma do banco — sem digitar nada manualmente.</p>
+  </section>
+
+  <section id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Enviar arquivos CNAB">
+    <input id="fileInput" type="file" accept=".txt,.ret,.rem,.cnab,text/plain,*/*" multiple hidden>
+    <div class="dz-core">
+      <div class="dz-ring"><div class="dz-ring2"></div><span class="dz-ico">⬆</span></div>
+      <p class="dz-title">Arraste os arquivos CNAB aqui</p>
+      <p class="dz-sub">ou <u>clique para selecionar</u> · aceita vários arquivos</p>
+    </div>
+    <div id="processing" class="processing"><span></span><span></span><span></span> lendo arquivos…</div>
+  </section>
+
+  <div id="fileChips" class="chips"></div>
+
+  <section id="panelResults" class="panel">
+    <div class="stats">
+      <div class="stat"><span id="stCount" class="stat-n">0</span><span class="stat-l">Lançamentos</span></div>
+      <div class="stat"><span id="stTotal" class="stat-n">R$ 0,00</span><span class="stat-l">Valor total</span></div>
+      <div class="stat"><span id="stLotes" class="stat-n">1 planilha</span><span class="stat-l">Saída</span></div>
+      <div class="stat"><span id="stInvalid" class="stat-n">0</span><span class="stat-l">A revisar</span></div>
+    </div>
+
+    <div id="confBadge" class="conf" style="display:none"></div>
+    <div id="limitWarn" class="limit" style="display:none"></div>
+
+    <div class="table-head">
+      <h2>Pré-visualização <small>(edite qualquer célula antes de exportar)</small></h2>
+      <div class="actions">
+        <button id="btnClear" class="btn ghost">Limpar</button>
+        <button id="btnExport" class="btn primary" disabled>
+          <span class="btn-ico">⤓</span> Gerar planilha(s) do BB
+        </button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="grid-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Favorecido</th><th>Tipo de chave</th><th>CPF/CNPJ</th>
+            <th>COMPE</th><th>Agência</th><th>Conta</th><th>Data</th><th>Valor (R$)</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="how">
+    <h2>Como funciona</h2>
+    <ol>
+      <li><b>Leitura CNAB 240.</b> Cada lançamento (Segmento A + B) vira uma linha: valor, data, favorecido, banco (COMPE), agência, conta e CPF/CNPJ.</li>
+      <li><b>Conferência.</b> A soma dos lançamentos é comparada ao total do próprio arquivo (trailer) — selo <i>Conferido ✓</i> quando bate.</li>
+      <li><b>Exportação.</b> Gera a planilha no modelo do BB (tipo de chave <b>5 – Dados Bancários</b>), com as duas linhas de cabeçalho idênticas ao original. Acima de 100 lançamentos, divide em lotes automaticamente.</li>
+    </ol>
+    <p class="foot-note">🔒 Seus dados bancários não saem do computador: a conversão roda inteiramente no navegador.</p>
+  </section>
+</main>
+
+<footer class="site-foot">
+  Ferramenta interna · CNAB 240 → modelo de importação PIX do Banco do Brasil
+</footer>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="assets/xlsx.full.min.js"></script>
+<script src="assets/jszip.min.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
