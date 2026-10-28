@@ -548,8 +548,25 @@ function initDropzone() {
   });
 }
 
+function effectiveThemeMode() {
+  const a = document.documentElement.getAttribute('data-theme');
+  if (a === 'light' || a === 'dark') return a;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+function initTheme() {
+  const btn = $('#themeToggle');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const next = effectiveThemeMode() === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('cnab-theme', next); } catch (e) {}
+    if (typeof window.__bgApplyTheme === 'function') window.__bgApplyTheme(next);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initDropzone();
+  initTheme();
   $('#btnExport').addEventListener('click', exportXlsx);
   $('#btnClear').addEventListener('click', clearAll);
   renderSummary();
