@@ -1,5 +1,5 @@
 /* =============================================================================
-   Conversor CNAB 240 (PGTO27)  ->  Planilha-padrão de remessas PIX do Banco do Brasil
+   Conversor CNAB 240  ->  Planilha-padrão de remessas PIX do Banco do Brasil
    Todo o processamento acontece no navegador. Nenhum dado sai do dispositivo.
    ============================================================================= */
 'use strict';
@@ -87,7 +87,7 @@ const MAX_POR_PLANILHA = 100;
 
 /* ---------------------------------------------------------------------------
    2. Parser CNAB 240
-   Posições (base 1) validadas contra o arquivo PGTO27:
+   Posições (base 1) validadas contra arquivo CNAB 240 de pagamentos:
      Segmento A: banco/COMPE 21-23 | agência 24-28 | conta 30-41 | DV conta 42
                  nome 44-73 | data pgto 94-101 | valor 120-134
      Segmento B: tipo inscrição 18 | nº inscrição (CPF/CNPJ) 19-32

@@ -1,6 +1,6 @@
 # Conversor CNAB para Planilha BB
 
-Ferramenta que lê arquivos **CNAB 240** (por exemplo, `PGTO27`) e gera a **planilha de
+Ferramenta que lê arquivos de pagamento no formato **CNAB 240** e gera a **planilha de
 importação de remessas PIX do Banco do Brasil**, pronta para enviar na plataforma do banco.
 
 Acesse: https://leonardomicheletti.github.io/cnab-para-bb
@@ -40,7 +40,7 @@ Acesse: https://leonardomicheletti.github.io/cnab-para-bb
 3. Confira a pré-visualização. A situação "Conferido" indica que o total bate com o arquivo.
 4. Clique em "Gerar planilha do BB" e importe o `.xlsx` na plataforma do banco.
 
-Há um arquivo de demonstração em `exemplo/EXEMPLO_PGTO27.txt`, com dados fictícios.
+Há um arquivo de demonstração em `exemplo/EXEMPLO_CNAB240.txt`, com dados fictícios.
 
 ## Rodando localmente
 
@@ -70,7 +70,7 @@ cnab-para-bb/
     xlsx.full.min.js   SheetJS
     jszip.min.js       JSZip
   exemplo/
-    EXEMPLO_PGTO27.txt arquivo de demonstração (dados fictícios)
+    EXEMPLO_CNAB240.txt arquivo de demonstração (dados fictícios)
 ```
 
 ## Observação
