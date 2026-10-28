@@ -19,7 +19,7 @@ const BB_HEADER_ROW1 = [
   'Instituição Financeira (ISPB)',
 ];
 
-// Segunda linha de cabeçalho (orientações) — igual ao modelo do banco, não pode ser alterada.
+// Segunda linha de cabeçalho (orientações): igual ao modelo do banco, não pode ser alterada.
 const BB_HEADER_ROW2 = [
   '1- Telefone\n2- e-mail\n3- CPF/CNPJ\n4- Chave Aleatoria\n5- Dados Bancários\n6- URL do QR Code\n7- Copia e Cola',
   'Formato da data: DD/MM/AAAA',
@@ -382,6 +382,10 @@ function clearAll() {
    --------------------------------------------------------------------------- */
 const $ = (sel) => document.querySelector(sel);
 
+const SVG_OK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+const SVG_WARN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+const SVG_DEL = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
 function setProcessing(on) {
   $('#processing').classList.toggle('show', on);
 }
@@ -398,7 +402,8 @@ function renderFileChips() {
   state.files.forEach((f) => {
     const chip = document.createElement('span');
     chip.className = 'chip';
-    chip.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M6 2h8l4 4v16H6z" opacity=".35"/><path fill="currentColor" d="M14 2l4 4h-4z"/></svg> ${escapeHtml(f.name)} <b>${f.entries.length}</b>`;
+    const plural = f.entries.length === 1 ? 'lançamento' : 'lançamentos';
+    chip.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> ${escapeHtml(f.name)} <b>${f.entries.length} ${plural}</b>`;
     box.appendChild(chip);
   });
   $('#panelResults').classList.toggle('show', state.entries.length > 0 || state.files.length > 0);
@@ -418,7 +423,7 @@ function renderTable() {
     if (errs.length) tr.classList.add('row-warn');
     tr.innerHTML = `
       <td class="muted">${i + 1}</td>
-      <td class="nome" title="${escapeHtml(e.nome)}">${escapeHtml(e.nome || '—')}</td>
+      <td class="nome" title="${escapeHtml(e.nome)}">${escapeHtml(e.nome || 'sem nome')}</td>
       <td>${tipoSelect(e, i)}</td>
       <td>${inp(e, i, 'cpfcnpj', 'doc')}</td>
       <td>${inp(e, i, 'compe', 'compe')}</td>
@@ -427,9 +432,9 @@ function renderTable() {
       <td>${inp(e, i, 'data', 'data')}</td>
       <td>${inp(e, i, 'valor', 'valor')}</td>
       <td class="status">${errs.length
-        ? `<span class="badge badge-warn" title="${escapeHtml(errs.join(' • '))}">⚠︎</span>`
-        : `<span class="badge badge-ok">✓</span>`}
-        <button class="del" data-del="${i}" title="Remover lançamento">✕</button></td>`;
+        ? `<span class="badge badge-warn" title="${escapeHtml(errs.join(' · '))}">${SVG_WARN}</span>`
+        : `<span class="badge badge-ok" title="Lançamento válido">${SVG_OK}</span>`}
+        <button class="del" data-del="${i}" title="Remover lançamento" aria-label="Remover lançamento">${SVG_DEL}</button></td>`;
     tbody.appendChild(tr);
   });
 
@@ -465,8 +470,8 @@ function onCellEdit(ev) {
   const st = tr.querySelector('.status .badge');
   if (st) {
     st.className = 'badge ' + (errs.length ? 'badge-warn' : 'badge-ok');
-    st.textContent = errs.length ? '⚠︎' : '✓';
-    st.title = errs.join(' • ');
+    st.innerHTML = errs.length ? SVG_WARN : SVG_OK;
+    st.title = errs.length ? errs.join(' · ') : 'Lançamento válido';
   }
   renderSummary();
 }
@@ -479,19 +484,20 @@ function renderSummary() {
 
   $('#stCount').textContent = n;
   $('#stTotal').textContent = 'R$ ' + centsToBR(somaCents).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  $('#stLotes').textContent = lotes + (lotes > 1 ? ' planilhas' : ' planilha');
+  $('#stLotes').textContent = String(lotes);
   $('#stInvalid').textContent = invalidas;
   $('#stInvalid').parentElement.classList.toggle('bad', invalidas > 0);
 
   const conf = $('#confBadge');
   if (trailerCents > 0) {
     conf.style.display = '';
+    const totalFmt = centsToBR(trailerCents).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     if (conferido) {
-      conf.className = 'conf ok';
-      conf.innerHTML = `✓ Conferido com o arquivo — total R$ ${centsToBR(trailerCents).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
+      conf.className = 'notice conf ok';
+      conf.innerHTML = `${SVG_OK}<span>Conferido com o arquivo. Total de R$ ${totalFmt}.</span>`;
     } else {
-      conf.className = 'conf bad';
-      conf.innerHTML = `⚠︎ Divergência: arquivo soma R$ ${centsToBR(trailerCents).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
+      conf.className = 'notice conf bad';
+      conf.innerHTML = `${SVG_WARN}<span>Divergência: o total informado no arquivo é R$ ${totalFmt}.</span>`;
     }
   } else {
     conf.style.display = 'none';
@@ -500,7 +506,7 @@ function renderSummary() {
   const lim = $('#limitWarn');
   lim.style.display = n > MAX_POR_PLANILHA ? '' : 'none';
   if (n > MAX_POR_PLANILHA) {
-    lim.textContent = `Acima de ${MAX_POR_PLANILHA} lançamentos — serão geradas ${lotes} planilhas (até ${MAX_POR_PLANILHA} cada) em um arquivo .zip.`;
+    lim.innerHTML = `${SVG_WARN}<span>Acima de ${MAX_POR_PLANILHA} lançamentos. Serão geradas ${lotes} planilhas (até ${MAX_POR_PLANILHA} cada), entregues em um arquivo .zip.</span>`;
   }
   $('#btnExport').disabled = n === 0;
 }
