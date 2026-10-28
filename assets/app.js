@@ -382,6 +382,13 @@ function clearAll() {
    --------------------------------------------------------------------------- */
 const $ = (sel) => document.querySelector(sel);
 
+// máscara de moeda (exibição): "R$ 1.500,00"; a exportação continua usando o formato plano "1500,00"
+function moneyBR(cents) {
+  if (!cents) return '';
+  return 'R$ ' + centsToBR(cents).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+function digitsToCents(s) { return parseInt(digitsOnly(s) || '0', 10); }
+
 const SVG_OK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
 const SVG_WARN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
 const SVG_DEL = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
@@ -422,7 +429,7 @@ function renderTable() {
     const tr = document.createElement('tr');
     if (errs.length) tr.classList.add('row-warn');
     tr.innerHTML = `
-      <td class="muted">${i + 1}</td>
+      <td class="idx">${i + 1}</td>
       <td class="nome" title="${escapeHtml(e.nome)}">${escapeHtml(e.nome || 'sem nome')}</td>
       <td>${tipoSelect(e, i)}</td>
       <td>${inp(e, i, 'cpfcnpj', 'doc')}</td>
@@ -430,20 +437,29 @@ function renderTable() {
       <td>${inp(e, i, 'agencia', 'ag')}</td>
       <td>${inp(e, i, 'conta', 'conta')}</td>
       <td>${inp(e, i, 'data', 'data')}</td>
-      <td>${inp(e, i, 'valor', 'valor')}</td>
-      <td class="status">${errs.length
-        ? `<span class="badge badge-warn" title="${escapeHtml(errs.join(' · '))}">${SVG_WARN}</span>`
-        : `<span class="badge badge-ok" title="Lançamento válido">${SVG_OK}</span>`}
-        <button class="del" data-del="${i}" title="Remover lançamento" aria-label="Remover lançamento">${SVG_DEL}</button></td>`;
+      <td>${valorInput(e, i)}</td>
+      <td class="status">${statusInner(e, i)}</td>`;
     tbody.appendChild(tr);
   });
 
   tbody.querySelectorAll('input').forEach((el) => el.addEventListener('input', onCellEdit));
   tbody.querySelectorAll('select').forEach((el) => el.addEventListener('change', onCellEdit));
-  tbody.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => {
-    state.entries.splice(parseInt(b.dataset.del, 10), 1);
-    renderAll();
-  }));
+}
+
+function valorInput(e, i) {
+  return `<input data-i="${i}" data-k="valor" inputmode="numeric" class="cell valor"
+    value="${escapeHtml(moneyBR(e.valorCents))}" placeholder="R$ 0,00" spellcheck="false">`;
+}
+
+// A coluna "Situação" é só indicador de validação: "Válido" quando a linha está
+// completa, "Revisar" (com o detalhe no tooltip) quando falta algo. O botão de
+// excluir é a única ação da coluna.
+function statusInner(e, i) {
+  const errs = validateEntry(e);
+  const pill = errs.length
+    ? `<span class="sit sit-warn" title="${escapeHtml(errs.join(' · '))}">${SVG_WARN}<span class="sit-txt">Revisar</span></span>`
+    : `<span class="sit sit-ok" title="Lançamento completo e válido">${SVG_OK}<span class="sit-txt">Válido</span></span>`;
+  return `${pill}<button class="del" data-del="${i}" title="Remover lançamento" aria-label="Remover lançamento">${SVG_DEL}</button>`;
 }
 
 function tipoSelect(e, i) {
@@ -461,18 +477,22 @@ function onCellEdit(ev) {
   const i = parseInt(el.dataset.i, 10);
   const k = el.dataset.k;
   if (!state.entries[i]) return;
-  state.entries[i][k] = el.value;
-  if (k === 'valor') state.entries[i].valorCents = brToCents(el.value);
-  // revalida só a linha (leve) + atualiza resumo
+  if (k === 'valor') {
+    // máscara de moeda: os dígitos digitados são tratados como centavos
+    const cents = digitsToCents(el.value);
+    state.entries[i].valorCents = cents;
+    state.entries[i].valor = centsToBR(cents);   // formato plano para exportação
+    el.value = moneyBR(cents);
+    try { el.setSelectionRange(el.value.length, el.value.length); } catch (e) {}
+  } else {
+    state.entries[i][k] = el.value;
+  }
+  // revalida só a linha + atualiza a situação e o resumo
   const tr = el.closest('tr');
   const errs = validateEntry(state.entries[i]);
   tr.classList.toggle('row-warn', errs.length > 0);
-  const st = tr.querySelector('.status .badge');
-  if (st) {
-    st.className = 'badge ' + (errs.length ? 'badge-warn' : 'badge-ok');
-    st.innerHTML = errs.length ? SVG_WARN : SVG_OK;
-    st.title = errs.length ? errs.join(' · ') : 'Lançamento válido';
-  }
+  const stCell = tr.querySelector('.status');
+  if (stCell) stCell.innerHTML = statusInner(state.entries[i], i);
   renderSummary();
 }
 
@@ -567,6 +587,12 @@ function initTheme() {
 document.addEventListener('DOMContentLoaded', () => {
   initDropzone();
   initTheme();
+  $('#tbody').addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-del]');
+    if (!b) return;
+    state.entries.splice(parseInt(b.dataset.del, 10), 1);
+    renderAll();
+  });
   $('#btnExport').addEventListener('click', exportXlsx);
   $('#btnClear').addEventListener('click', clearAll);
   renderSummary();

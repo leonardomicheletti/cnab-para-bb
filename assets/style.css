@@ -238,12 +238,15 @@ main { max-width: 1080px; margin: 0 auto; padding: clamp(14px, 3vw, 28px) clamp(
 .sel { font-family: inherit; cursor: pointer; min-width: 136px; }
 .sel option { background: var(--surface-solid); color: var(--text); }
 
-.status { white-space: nowrap; }
-.badge { display: inline-flex; align-items: center; justify-content: center; }
-.badge svg { display: block; }
-.badge-ok { color: var(--ok); filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ok) 45%, transparent)); }
-.badge-warn { color: var(--warn); cursor: help; }
-.del { margin-left: 8px; background: transparent; border: 1px solid transparent; color: var(--text-subtle); cursor: pointer;
+.status { white-space: nowrap; display: flex; align-items: center; gap: 4px; }
+.sit { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600;
+  padding: 3px 9px 3px 7px; border-radius: 7px; cursor: default; }
+.sit svg { display: block; }
+.sit-txt { letter-spacing: .2px; }
+.sit-ok { color: var(--ok); background: var(--ok-weak); }
+.sit-ok svg { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--ok) 45%, transparent)); }
+.sit-warn { color: var(--warn); background: var(--warn-weak); cursor: help; }
+.del { margin-left: 2px; background: transparent; border: 1px solid transparent; color: var(--text-subtle); cursor: pointer;
   border-radius: 7px; padding: 4px; display: inline-flex; vertical-align: middle; transition: color .12s, background .12s; }
 .del:hover { color: var(--danger); background: var(--danger-weak); }
 .del svg { display: block; }
