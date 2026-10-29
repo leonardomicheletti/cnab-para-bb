@@ -85,6 +85,39 @@ function buildOrientacoesAoa() {
 
 const MAX_POR_PLANILHA = 100;
 
+/* Código ISPB por COMPE (banco). O CNAB não traz o ISPB, então ele é
+   preenchido na coluna I da planilha a partir do banco favorecido. */
+const ISPB_BY_COMPE = {
+  '413': '01858774', // Banco BV (antigo Votorantim)
+  '001': '00000000', // Banco do Brasil
+  '077': '00416968', // Banco Inter
+  '623': '59285411', // Banco Pan
+  '422': '58160789', // Banco Safra
+  '348': '02332641', // Banco XP
+  '041': '92702067', // Banrisul
+  '318': '31871927', // BMG
+  '070': '00000208', // BRB (Banco de Brasília)
+  '237': '60746948', // Bradesco
+  '208': '30306294', // BTG Pactual
+  '336': '31872495', // C6 Bank
+  '104': '00360305', // Caixa Econômica Federal
+  '341': '60701190', // Itaú Unibanco
+  '323': '10573521', // Mercado Pago
+  '536': '20855875', // Neon
+  '260': '18236120', // Nubank
+  '290': '08561701', // PagBank (PagSeguro)
+  '380': '22896431', // PicPay (antigo Banco Original)
+  '212': '22896431', // PicPay (antigo Banco Original)
+  '033': '90400888', // Santander
+  '756': '02038232', // Sicoob (Bancoob)
+  '748': '01181521', // Sicredi
+  '197': '16501555', // Stone IP
+};
+function ispbFor(entry) {
+  const key = digitsOnly(entry.compe || '').padStart(3, '0');
+  return ISPB_BY_COMPE[key] || entry.ispb || '';
+}
+
 /* ---------------------------------------------------------------------------
    2. Parser CNAB 240
    Posições (base 1) validadas contra arquivo CNAB 240 de pagamentos:
@@ -246,7 +279,7 @@ function entryToRow(e) {
     e.agencia && e.agencia !== '0' ? e.agencia : '',
     e.conta && e.conta !== '0' ? e.conta : '',
     e.compe || '',
-    e.ispb || '',
+    ispbFor(e),
   ];
 }
 
